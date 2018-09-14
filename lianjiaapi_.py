@@ -4,12 +4,6 @@ import hashlib
 import requests
 
 
-def get_md5(txt):
-    """md5加密函数"""
-    m = hashlib.md5()
-    m.update(txt.encode('utf-8'))
-    return m.hexdigest()
-
 
 def get_line_site(url):
     """请求链接"""
