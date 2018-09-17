@@ -1,8 +1,7 @@
-
-
 # import modules
 import requests
 import json
+from bs4 import BeautifulSoup
 
 
 strMD5Salt = "vfkpbin1ix2rb88gfjebs0f60cbvhedl"
@@ -35,12 +34,6 @@ dictURL = {
         "MD5Data": strMD5Salt + "id={id}order={order}page={page}request_ts={request_ts}"
     },
 }
-
-tupleGroupType = (
-    "district",     #行政区
-    "bizcircle",    #商圈
-    "community",    #居民小区
-    )
 
 lstCity = [
     ('https://bj.lianjia.com/', '北京'),
@@ -87,3 +80,22 @@ dictCity = {
     '厦门': {'city_id': '350200', 'max_lat': '24.794145', 'min_lat': '24.241819', 'max_lng': '118.533083',
            'min_lng': '117.892627'}
     }
+
+dictGroupType = {
+    "district":0.3,     #行政区
+    "bizcircle":0.08,    #商圈
+    "community":0.01     #居民小区
+}
+
+
+class Crawler(object):
+    """
+
+    """
+    def __init__(self, ):
+        pass
+
+    def request(self, ):
+        pass
+
+    def
