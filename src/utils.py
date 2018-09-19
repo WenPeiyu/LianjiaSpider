@@ -55,8 +55,19 @@ def get_cor(city):
     return res
 
 
-def get_city_list():
+def get_path():
+    """
 
+    :return:
+    """
+    return os.getcwd()
+
+
+def get_city_list():
+    """
+    get the full city list at lianjia.com
+    :return:
+    """
     res = requests.get("https://sh.lianjia.com/city/")
     work = BeautifulSoup(res.text, "lxml")
     res = set([(i["href"], i.string) for i in
@@ -64,17 +75,23 @@ def get_city_list():
     citycodemapping = pd.read_csv(r"C:\Users\wenpeiyu\Desktop\citycodemapping.csv")
     dfcitylist = pd.DataFrame({
         "city": [i[1] for i in res],
-        "cityurl": [i[0] for i in res]})
+        "city_url": [i[0] for i in res]})
     dfCityList = pd.merge(dfcitylist, citycodemapping, how="inner", on=["city"])
     lng = [get_cor(i + "市")['lng'] for i in dfCityList.city]
     lat = [get_cor(i + "市")['lat'] for i in dfCityList.city]
+    minlng = [i - 0.3 for i in lng]
+    minlat = [i - 0.3 for i in lat]
     city = [i for i in dfCityList.city]
     dfCityCor = pd.DataFrame({
         "city": city,
-        "lat": lat,
-        "lng": lng
+        "max_lat": lat,
+        "max_lng": lng,
+        "min_lat": minlat,
+        "min_lng": minlng
     })
     dfCityList = pd.merge(dfCityList, dfCityCor, how="inner", on=["city"])
+    dfCityList = dfCityList.rename(columns={"citycode": "city_id"})
+    dfCityList.to_csv(r".\etc\CityList.csv", index=False)
 
 
 
