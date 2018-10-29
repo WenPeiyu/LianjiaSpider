@@ -1,6 +1,7 @@
 import re
 import os
 import time
+import sys
 
 
 def contain_zh(word):
@@ -65,3 +66,15 @@ def time_ymd():
     :return: 当前年月日 例:"20181012"
     """
     return time.strftime("%Y%m%d", time.localtime(time.time()))
+
+
+def time_sleep(sec):
+    time.sleep(sec)
+
+
+def time_ymdhm():
+    """
+    获取当前年月日
+    :return: 当前年月日 例:"20181012"
+    """
+    return time.strftime("%Y%m%d%H%M", time.localtime(time.time()))

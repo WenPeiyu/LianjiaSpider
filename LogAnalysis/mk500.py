@@ -1,127 +1,11 @@
 from config import *
 from log import logger
 from filetrans import UDPClient
-
-
-Attach = {
-    'MsgType': 'Attach',
-    'BoxIp': BoxIp,
-    'Mode': 1,
-    'StartUeId': StartUeId,
-    'EndUeId': EndUeId,
-    'Interval': 100
-}
-
-Detach = {
-    'MsgType': 'Detach',
-    'BoxIp': BoxIp,
-    'StartUeId': StartUeId,
-    'EndUeId': EndUeId,
-    'Interval': 100
-}
-
-UpPing = {
-    'MsgType': 'UpPing',
-    'BoxIp': BoxIp,
-    'PdnIp': pdnIp,
-    'StartUeId': StartUeId,
-    'EndUeId': EndUeId,
-    'Count': 5,
-    'Size': 32,
-    'Interval': 100,
-    'TimeOut': 10000,
-    'UeInterval': 100
-}
-
-UPackage = {
-    'MsgType': 'StartService',
-    'BoxIp': BoxIp,
-    'StartUeId': StartUeId,
-    'EndUeId': EndUeId,
-    'Mode': 1,
-    'Interval': 0,
-    'Period': 10000,
-    'DelayTime': 0,
-    'Process': 	['U,800,0']
-}
-
-DPackage = {
-    'MsgType': 'StartService',
-    'BoxIp': BoxIp,
-    'StartUeId': StartUeId,
-    'EndUeId': EndUeId,
-    'Mode': 1,
-    'Interval': 0,
-    'Period': 2000,
-    'DelayTime': 0,
-    'Process': 	['D,800,0']
-    }
-
-ShuiBiao = {
-    'MsgType': 'StartService',
-    'BoxIp': BoxIp,
-    'StartUeId': StartUeId,
-    'EndUeId': EndUeId,
-    'Mode': 1,
-    'Interval': 0,
-    'Period': 2000,
-    'DelayTime': 0,
-    'Process': 	['U,165,0', 'D,24,0']
-}
-
-CloseService = {
-    'MsgType': 'CloseService'
-}
-
-SaveAttach = {
-    'MsgType': 'SaveAttach',
-    'FileName': 'Attach'
-}
-
-SavePing = {
-    'MsgType': 'SavePing',
-    'FileName': 'Ping'
-}
-
-SaveUeState = {
-    'MsgType': 'SaveUeState',
-    'FileName': 'UeState'
-}
-
-SaveAttachDelay = {
-    'MsgType': 'SaveAttachDelay',
-    'FileName': 'AttachDelay'
-}
-
-SaveMeasure = {
-    'MsgType': 'SaveMeasure',
-    'FileName': 'Measure'
-}
-
-ClearAttach = {
-    'MsgType': 'ClearAttach'
-}
-
-ClearPing = {
-    'MsgType': 'ClearPing'
-}
-
-ClearUeState = {
-    'MsgType': 'ClearUeState'
-}
-
-ClearAttachDelay = {
-    'MsgType': 'ClearAttachDelay'
-}
-
-ClearSignal = {
-    'MsgType': 'ClearSignal'
-}
+from utils import *
 
 
 class MK500:
-    def __init__(self, dstip=None, dstport=None, boxip=None, pdnip=None,
-                 startueid=None, endueid=None):
+    def __init__(self, dstip=None, dstport=None, boxip=None, pdnip=None):
         self.logger = logger
         if dstip is None:
             self.dstIP = dstIP
@@ -139,59 +23,189 @@ class MK500:
             self.pdnIp = pdnIp
         else:
             self.pdnIp = pdnip
-        if startueid is None:
-            self.StartUeId = StartUeId
-        else:
-            self.StartUeId = startueid
-        if endueid is None:
-            self.EndUeId = EndUeId
-        else:
-            self.EndUeId = endueid
+
+        self.CloseService = {
+            'MsgType': 'CloseService'
+        }
+
+        self.SaveAttach = {
+            'MsgType': 'SaveAttach',
+            'FileName': 'Attach'
+        }
+
+        self.SavePing = {
+            'MsgType': 'SavePing',
+            'FileName': 'Ping'
+        }
+
+        self.SaveUeState = {
+            'MsgType': 'SaveUeState',
+            'FileName': 'UeState'
+        }
+
+        self.SaveAttachDelay = {
+            'MsgType': 'SaveAttachDelay',
+            'FileName': 'AttachDelay'
+        }
+
+        self.SaveMeasure = {
+            'MsgType': 'SaveMeasure',
+            'FileName': 'Measure'
+        }
+
+        self.ClearAttach = {
+            'MsgType': 'ClearAttach'
+        }
+
+        self.ClearPing = {
+            'MsgType': 'ClearPing'
+        }
+
+        self.ClearUeState = {
+            'MsgType': 'ClearUeState'
+        }
+
+        self.ClearAttachDelay = {
+            'MsgType': 'ClearAttachDelay'
+        }
+
+        self.ClearSignal = {
+            'MsgType': 'ClearSignal'
+        }
+
         self.Command = {
-            "Attach": Attach,
-            "Detach": Detach,
-            "UpPing": UpPing,
-            "UPackage": UPackage,
-            "DPackage": DPackage,
-            "ShuiBiao": ShuiBiao,
-            "CloseService": CloseService,
-            "Save": [SaveAttach, SavePing, SaveUeState, SaveAttachDelay, SaveAttachDelay],
-            "Clear": [ClearAttach, ClearAttachDelay, ClearPing, ClearSignal, ClearUeState]
+            "CloseService": self.CloseService,
+            "Save": [self.SaveAttach, self.SavePing, self.SaveUeState, self.SaveAttachDelay, self.SaveMeasure],
+            "Clear": [self.ClearAttach, self.ClearAttachDelay, self.ClearPing, self.ClearSignal, self.ClearUeState]
         }
         self.client = UDPClient(self.dstIP, self.dstPort)
         self.logger.info("{0}初始化成功".format(__class__.__name__))
 
-    def attach(self):
-        self.client.sendmsg(self.Command["Attach"])
+    def attach(self, start, end):
+        attach = {
+            'MsgType': 'Attach',
+            'BoxIp': self.BoxIp,
+            'Mode': 1,
+            'StartUeId': start,
+            'EndUeId': end,
+            'Interval': 100
+        }
+        self.client.sendmsg(attach)
         self.logger.info("发送Attach命令到{0}".format(self.dstIP))
 
-    def detach(self):
-        self.client.sendmsg(self.Command["Detach"])
+    def detach(self, start, end):
+        detach = {
+            'MsgType': 'Detach',
+            'BoxIp': self.BoxIp,
+            'StartUeId': start,
+            'EndUeId': end,
+            'Interval': 100
+        }
+        self.client.sendmsg(detach)
         self.logger.info("发送Detach命令到{0}".format(self.dstIP))
 
     def save(self):
-        self.client.sendmsg(self.Command["Save"])
+        for i in self.Command["Save"]:
+            self.client.sendmsg(i)
         self.logger.info("发送保存窗口记录命令到{0}".format(self.dstIP))
 
     def clear(self):
-        self.client.sendmsg(self.Command["Clear"])
+        for i in self.Command["Clear"]:
+            self.client.sendmsg(i)
         self.logger.info("发送清空窗口命令到{0}".format(self.dstIP))
 
     def close(self):
         self.client.sendmsg(self.Command["CloseService"])
         self.logger.info("发送关闭服务命令到{0}".format(self.dstIP))
 
-    def ping(self):
-        self.client.sendmsg(self.Command["UpPing"])
+    def ping(self, start, end):
+        ping = {
+            'MsgType': 'UpPing',
+            'BoxIp': self.BoxIp,
+            'PdnIp': self.pdnIp,
+            'StartUeId': start,
+            'EndUeId': end,
+            'Count': 360000,
+            'Size': 32,
+            'Interval': 100,
+            'TimeOut': 10000,
+            'UeInterval': 100
+        }
+        self.client.sendmsg(ping)
         self.logger.info("发送Ping {1}命令到{0}".format(self.dstIP, self.pdnIp))
 
-    def upload(self):
-        self.client.sendmsg(self.Command["UPackage"])
+    def upload(self, start, end):
+        upackage = {
+            'MsgType': 'StartService',
+            'BoxIp': self.BoxIp,
+            'StartUeId': start,
+            'EndUeId': end,
+            'Mode': 1,
+            'Interval': 0,
+            'Period': 20000,
+            'DelayTime': 0,
+            'Process': ['U,800,0']
+        }
+        self.client.sendmsg(upackage)
         self.logger.info("发送上行灌包命令到{0}".format(self.dstIP))
 
-    def download(self):
-        self.client.sendmsg(self.Command["DPackage"])
+    def download(self, start, end):
+        dpackage = {
+            'MsgType': 'StartService',
+            'BoxIp': self.BoxIp,
+            'StartUeId': start,
+            'EndUeId': end,
+            'Mode': 1,
+            'Interval': 0,
+            'Period': 20000,
+            'DelayTime': 0,
+            'Process': ['D,800,0']
+        }
+        self.client.sendmsg(dpackage)
         self.logger.info("发送下行灌包命令到{0}".format(self.dstIP))
 
-a = MK500()
-a.attach()
+    def shuibiao(self, start, end):
+        shuibiao = {
+            'MsgType': 'StartService',
+            'BoxIp': self.BoxIp,
+            'StartUeId': start,
+            'EndUeId': end,
+            'Mode': 1,
+            'Interval': 0,
+            'Period': 20000,
+            'DelayTime': 0,
+            'Process': ['U,165,0', 'D,24,0']
+        }
+
+        self.client.sendmsg(shuibiao)
+        self.logger.info("发送模拟水表读数上报命令到{0}".format(self.dstIP))
+
+    def danche(self, start, end):
+        danche = {
+            'MsgType': 'StartService',
+            'BoxIp': self.BoxIp,
+            'StartUeId': start,
+            'EndUeId': end,
+            'Mode': 1,
+            'Interval': 0,
+            'Period': 20000,
+            'DelayTime': 0,
+            'Process': ['D,160,0', 'U,86,0', 'D,27,0']
+        }
+        self.client.sendmsg(danche)
+        self.logger.info("发送模拟单车开锁命令到{0}".format(self.dstIP))
+
+    def pos(self, start, end):
+        pos = {
+            'MsgType': 'StartService',
+            'BoxIp': self.BoxIp,
+            'StartUeId': start,
+            'EndUeId': end,
+            'Mode': 1,
+            'Interval': 0,
+            'Period': 20000,
+            'DelayTime': 0,
+            'Process': ['U,181,0', 'D,218,0']
+        }
+        self.client.sendmsg(pos)
+        self.logger.info("发送模拟Pos机命令到{0}".format(self.dstIP))

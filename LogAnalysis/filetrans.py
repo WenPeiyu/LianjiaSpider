@@ -2,21 +2,12 @@ from ftplib import FTP, error_perm
 from utils import *
 from log import logger
 import socket
+import paramiko
 
 
 class FTPClient(object):
-
     """
     包含上传下载功能的FTP客户端
-    例子1(从3GPP协议存储网站下载38系列全部协议):
-    >>>client = FTPClient("ftp.3gpp.org", 21, "anonymous")
-    >>>client.connect()
-    >>>a.download(r"/Specs/archive/38_series/", "H:/specs", "nlst") # 不支持mlsd检索目录的网站可用nlst方法替代
-    例子2(开通ftp服务器的本地的上传下载演示):
-    >>>client = FTPClient("127.0.0.1", 21, "root", "root")
-    >>>client.connect()
-    >>>client.upload("/test/", "h:/folder1/")
-    >>>client.download("/test/", "h:/folder2/")
     """
     def __init__(self, host, port=21, username=None, password=None):
         """
@@ -70,11 +61,14 @@ class FTPClient(object):
             self.logger.error("文件{0}下载失败".format(remote_path))
             self.logger.debug(e)
 
-    def _download_nlst(self, remote_path, local_path):
+    def _download_nlst(self, remote_path, local_path, size_, timetag, delete):
         """
         nlst方式检索的下载方法
         :param remote_path: 远程路径
         :param local_path: 本地路径
+        :param size_: 保存门限，只保留大于此大小的文件
+        :param timetag: 时间标签开关，True则保存本地文件时后缀时间tag
+        :param delete: 删除远程文件开关，True则下载成功后删除远程端文件
         :return:
         """
         # 判断远程路径是文件还是文件夹
@@ -87,8 +81,26 @@ class FTPClient(object):
 
         # 文件直接调用下载之
         if current_remote_type == "file":
-            current_local_path = local_path + "/" + os.path.basename(remote_path)
-            self._download_file(remote_path, current_local_path)
+            # timetag决定是否在本地文件名后加上时间标签
+            if timetag:
+                current_local_path = local_path + "/" + os.path.basename(remote_path).split(".")[0] + time_ymdhm() \
+                                 + "." + os.path.basename(remote_path).split(".")[1]
+            else:
+                current_local_path = local_path + "/" + os.path.basename(remote_path)
+
+            # 本地已存在文件则跳过下载
+            if os.path.exists(current_local_path):
+                self.logger.warning("文件{0}已在本地存在".format(remote_path))
+            else:
+                self._download_file(remote_path, current_local_path)
+                # 若本地文件小于门限值则不保存
+                if size_ > os.path.getsize(current_local_path):
+                    os.remove(current_local_path)
+                # 若删除开关打开则下载成功后删除远程端文件
+                elif delete:
+                    self.client.delete(remote_path)
+                    self.logger.info("已删除文件{0}远程端".format(remote_path))
+
         # 文件夹进入文件夹递归调用本function
         elif current_remote_type == "dir":
             current_local_path = local_path + "/" + os.path.basename(remote_path)
@@ -96,16 +108,19 @@ class FTPClient(object):
                 os.makedirs(current_local_path)
                 self.logger.info("文件夹{0}创建成功".format(current_local_path))
             except FileExistsError:
-                self.logger.debug("文件夹{0}已经存在".format(current_local_path))
+                self.logger.warning("文件夹{0}已经存在".format(current_local_path))
             for i in self.client.nlst(remote_path):
-                self._download_nlst(i, current_local_path)
+                self._download_nlst(i, current_local_path, size_, timetag, delete)
 
-    def download(self, remote_path, local_path, method="mlsd"):
+    def download(self, remote_path, local_path, size_=0, method="mlsd", time_tag=False, delete=False):
         """
         将远程目录下所有内容下载到本地目录下
         :param remote_path: 远程路径
         :param local_path: 本地路径
+        :param size_: 文件尺寸控制，大于该大小的文件才会进入下载
         :param method: FTP服务器目录遍历方式(mlsd或者nlst)
+        :param time_tag: 时间标签开关，True则保存本地文件时后缀时间tag
+        :param delete: 开关 - 下载完成后是否删除远程端
         """
         # 验证远程目录是否包含中文
         if contain_zh(remote_path):
@@ -121,15 +136,31 @@ class FTPClient(object):
 
         # 遍历远程路径文件与文件夹
         if method == "nlst":
-            self._download_nlst(remote_path, local_path)
+            self._download_nlst(remote_path, local_path, size_, time_tag, delete)
             return 1
         for i in self.client.mlsd(remote_path):
             current_remote_type = i[1]["type"]
-            # 若是文件则调用直接download_file下载之
-            if current_remote_type == "file":
+
+            # 若是文件且文件大小大于门限值则调用直接download_file下载之
+            if current_remote_type == "file" and int(i[1]["size"]) >= size_:
                 current_remote_path = remote_path + i[0]
-                current_local_path = local_path + i[0]
-                self._download_file(current_remote_path, current_local_path)
+
+                # 若事件标签开则本地下载后文件添加时间后缀标签
+                if time_tag:
+                    current_local_path = local_path + i[0].split(".")[0] + time_ymdhm() + "." + i[0].split(".")[1]
+                else:
+                    current_local_path = local_path + i[0]
+
+                # 若文件在本地不存在则下载之
+                if os.path.exists(current_local_path):
+                    self.logger.warning("文件{0}在本地已存在".format(current_remote_path))
+                else:
+                    self._download_file(current_remote_path, current_local_path)
+
+                    # 如果删除开关打开则删除下载成功的文件的远程端
+                    if delete:
+                        self.client.delete(current_remote_path)
+                        self.logger.info("已删除文件{0}远程端".format(current_remote_path))
             # 若是文件夹则递归调用本function
             elif current_remote_type == "dir":
                 current_remote_path = remote_path + i[0] + "/"
@@ -138,8 +169,8 @@ class FTPClient(object):
                     os.makedirs(current_local_path)
                     self.logger.info("文件夹{0}创建成功".format(current_local_path))
                 except FileExistsError:
-                    self.logger.debug("文件夹{0}已经存在".format(current_local_path))
-                self.download(current_remote_path, current_local_path)
+                    self.logger.warning("文件夹{0}已经存在".format(current_local_path))
+                self.download(current_remote_path, current_local_path, size_, time_tag=time_tag, delete=delete)
 
     def _upload_file(self, remote_path, local_path):
         """
@@ -227,16 +258,64 @@ class TCPClient(object):
         self.logger.info("{0}初始化成功".format(__class__.__name__))
 
 
+class SSHClient(object):
+    def __init__(self, host, port, username, password):
+        self._host = host
+        self._port = port
+        self._username = username
+        self._password = password
+        self._transport = None
+        self._sftp = None
+        self._client = None
+        self._connect()  # 建立连接
 
+    def _connect(self):
+        transport = paramiko.Transport((self._host, self._port))
+        transport.connect(username=self._username, password=self._password)
+        self._transport = transport
 
+    # 下载
+    def download(self, remote_path, local_path):
+        if self._sftp is None:
+            self._sftp = paramiko.SFTPClient.from_transport(self._transport)
+        self._sftp.get(remote_path, local_path)
+
+    # 上传
+    def put(self, local_path, remote_path):
+        if self._sftp is None:
+            self._sftp = paramiko.SFTPClient.from_transport(self._transport)
+        self._sftp.put(local_path, remote_path)
+
+    # 执行命令
+    def exec_command(self, command):
+        if self._client is None:
+            self._client = paramiko.SSHClient()
+            self._client._transport = self._transport
+        stdin, stdout, stderr = self._client.exec_command(command)
+        data = stdout.read()
+        if len(data) > 0:
+            print
+            data.strip()  # 打印正确结果
+            return data
+        err = stderr.read()
+        if len(err) > 0:
+            print
+            err.strip()  # 输出错误结果
+            return err
+
+    def close(self):
+        if self._transport:
+            self._transport.close()
+        if self._client:
+            self._client.close()
 
 
 # a = FTPClient("ftp.3gpp.org", 21, "anonymous")
 # a.connect()
-# a.download(r"/Specs/archive/38_series/", "H:/3GPPSpecs", "nlst")
+# a.download(r"/Specs/archive/38_series/", "H:/3GPPSpecs/38Series/", method="nlst")
+# a.download(r"/Specs/archive/36_series/", "H:/3GPPSpecs/36Series/", method="nlst")
 
-
-# client = FTPClient("10.63.153.212", 21, "root", "root")
+# client = FTPClient("127.0.0.1", 21, "root", "root")
 # client.connect()
-# client.download("/9.13VolumeTest/", "h:/downloadtest/")
+# client.download("/downloadtest//", "h:/downloadtest111/", size_=31457000, time_tag=True, delete=True)
 
