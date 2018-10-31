@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 DIALCT = "mysql"
 DRIVER = "mysqlconnector"
 USERNAME = "root"
-PASSWORD = "wsdwb#455190881"
+PASSWORD = ""
 HOST = "120.24.56.100"
 PORT = "3306"
 DATABASE = "lianjia"
