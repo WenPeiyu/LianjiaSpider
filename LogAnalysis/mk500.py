@@ -148,7 +148,6 @@ class MK500:
         }
         self.client.sendmsg(upackage)
         self.logger.info("发送上行灌包命令到{0}".format(self.dstIP))
-
     def download(self, start, end):
         dpackage = {
             'MsgType': 'StartService',

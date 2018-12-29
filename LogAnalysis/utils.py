@@ -78,3 +78,41 @@ def time_ymdhm():
     :return: 当前年月日 例:"20181012"
     """
     return time.strftime("%Y%m%d%H%M", time.localtime(time.time()))
+
+
+dict_directory_structure = {
+    "Node": "/mnt/mfs/LBS",
+    "Desc": "定位数据库",
+    "Children": [
+        {"Node": "01_LTE",
+         "Desc": "LTE模式",
+         "Children": [
+             {"Node": "QCELL",
+              "Desc": "",
+              "Children": []
+              },
+             {"Node": "Macro",
+              "Desc": "",
+              "Children": []
+              },
+         ]},
+        {"Node": "02_NB",
+         "Desc": "NB-IoT模式",
+         "Children": []},
+        {"Node": "03_5G_LF",
+         "Desc": "5G低频模式",
+         "Children": []},
+        {"Node": "04_5G_HF",
+         "Desc": "5G高频模式",
+         "Children": []},
+        {"Node": "05_GPS",
+         "Desc": "GPS卫星模式",
+         "Children": []},
+        {"Node": "06_IMG",
+         "Desc": "视频图像模式",
+         "Children": []},
+        {"Node": "07_MEMS",
+         "Desc": "惯性导航模式",
+         "Children": []},
+    ]
+}

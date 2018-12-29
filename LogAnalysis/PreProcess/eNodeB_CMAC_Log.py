@@ -2,13 +2,21 @@
 import pandas as pd
 import re
 import time
+import sys
+import os
 
 # 路径地址
-FilePath = r"d:/data/"
-OriginFile = FilePath + r"BPN_3_40__144201810221741_output.txt"
-FixedCSV = FilePath + r"Fixed.csv"
-ErrorFile = FilePath + r"Error.txt"
-LogOutput = FilePath + r"LogOutput.xlsx"
+# FilePath = r"d:/data/"
+# OriginFile = FilePath + r"BPN_3_40_3_104201810241801_output.txt"
+# FixedCSV = FilePath + r"Fixed.csv"
+# ErrorFile = FilePath + r"Error.txt"
+# LogOutput = FilePath + r"LogOutput.xlsx"
+FilePath = os.path.split(os.path.split(sys.argv[0])[0])[0] + "/rawdata"
+OriginFile = FilePath + r"/enodeb.txt"
+FixedCSV = FilePath + r"/Fixed.csv"
+ErrorFile = FilePath + r"/Error.txt"
+LogOutput = FilePath + r"/LogOutput.csv"
+
 
 time1 = time.time()
 # 读取文本转换成不存在歧义的CSV
@@ -82,6 +90,6 @@ df_log = pd.DataFrame({"DateTime": DateTime,
                        "Message": Message
                       })
 time5 = time.time()
-df_log.to_excel(LogOutput)
+df_log.to_csv(LogOutput,escapechar='"',index=False)
 time6 = time.time()
 RunTime = [time1, time2, time3, time4, time5, time6]

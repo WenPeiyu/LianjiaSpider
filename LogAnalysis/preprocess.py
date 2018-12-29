@@ -70,4 +70,4 @@ def pre_cmac_log(input_path):
         _pre_cmac_log(i, output_path)
 
 
-pre_cmac_log("H:/LogAnalysis/RawData/eNodeBLog/3/")
+pre_cmac_log("H:/LogAnalysis/RawData/eNodeBLog/4/")

@@ -4,7 +4,7 @@ import sys
 import os
 
 # 模块名称
-ModuleName = "LogAnalysis"
+ModuleName = "MysqlInsert"
 
 # 打印文件日志生效地址
 LogName = os.path.expanduser('~') + "/" + ModuleName + ".log"

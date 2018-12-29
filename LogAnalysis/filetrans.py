@@ -270,6 +270,7 @@ class SSHClient(object):
         self._connect()  # 建立连接
 
     def _connect(self):
+        """"""
         transport = paramiko.Transport((self._host, self._port))
         transport.connect(username=self._username, password=self._password)
         self._transport = transport
@@ -318,4 +319,3 @@ class SSHClient(object):
 # client = FTPClient("127.0.0.1", 21, "root", "root")
 # client.connect()
 # client.download("/downloadtest//", "h:/downloadtest111/", size_=31457000, time_tag=True, delete=True)
-
